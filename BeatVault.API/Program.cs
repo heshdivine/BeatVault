@@ -14,6 +14,8 @@ builder.Services.AddDbContext<DataContext>(options =>
 builder.Services.AddScoped<IBeatRepository, BeatRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 //builder.Services.AddControllers();
 builder.Services.AddControllers().AddJsonOptions(x =>
     x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
