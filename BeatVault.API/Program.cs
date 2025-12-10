@@ -1,8 +1,12 @@
 using BeatVault.API.Data;
 using BeatVault.API.Data.Repositories;
 using BeatVault.API.Interfaces;
+using BeatVault.API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,8 +17,23 @@ builder.Services.AddDbContext<DataContext>(options =>
 
 builder.Services.AddScoped<IBeatRepository, BeatRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"])),
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["JwtSettings:Audience"]
+        };
+    });
 
 //builder.Services.AddControllers();
 builder.Services.AddControllers().AddJsonOptions(x =>
@@ -34,6 +53,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
