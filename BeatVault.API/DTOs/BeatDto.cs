@@ -7,6 +7,7 @@
         public int BPM { get; set; }
         public string Key { get; set; } = string.Empty;
         public string AudioUrl { get; set; } = string.Empty;
+        public int? AuctionId { get; set; }
         public decimal? LeasePrice { get; set; }
 
         // Flattening: We just want the name, not the whole User object

@@ -35,9 +35,14 @@ const Account = {
     register: (values: any) => requests.post<User>('/account/register', values),
 };
 
+const Auctions = {
+    bid: (beatId: string, amount: number) => requests.post(`/auctions/bid?beatId=${beatId}&amount=${amount}`, {})
+};
+
 const agent = {
     Beats,
-    Account
+    Account,
+    Auctions
 };
 
 export default agent;

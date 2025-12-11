@@ -6,5 +6,6 @@ export interface Beat {
     audioUrl: string;
     leasePrice?: number;
     producerName: string;
-    // We will add Auction properties later
+    auctionId?: number;
+
 }
