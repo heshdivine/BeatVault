@@ -1,7 +1,9 @@
 ﻿using AutoMapper; // Import this
+using BeatVault.API.Data.Repositories;
 using BeatVault.API.DTOs;
 using BeatVault.API.Entities;
 using BeatVault.API.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BeatVault.API.Controllers
@@ -12,11 +14,13 @@ namespace BeatVault.API.Controllers
     {
         private readonly IBeatRepository _beatRepository;
         private readonly IMapper _mapper; // Add Mapper
+        private readonly IUserRepository _userRepository;
 
         // Inject Mapper here
-        public BeatsController(IBeatRepository beatRepository, IMapper mapper)
+        public BeatsController(IBeatRepository beatRepository, IMapper mapper, IUserRepository userRepository)
         {
             _beatRepository = beatRepository;
+            _userRepository = userRepository;
             _mapper = mapper;
         }
 
@@ -35,6 +39,7 @@ namespace BeatVault.API.Controllers
         }
 
         // POST: api/beats
+        [Authorize(Roles = "Producer")]
         [HttpPost]
         public async Task<ActionResult<BeatDto>> CreateBeat(Beat beat)
         {
@@ -49,6 +54,20 @@ namespace BeatVault.API.Controllers
             }
 
             return BadRequest("Failed to save beat");
+        }
+
+        [Authorize(Roles = "Producer")]
+        [HttpGet("my-studio")]
+        public async Task<ActionResult<IEnumerable<BeatDto>>> GetMyBeats()
+        {
+            // Interview Win: Extracting the user ID/Email from the Token directly
+            var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+            // We would fetch the producer record using email, then fetch their beats
+            var user = await _userRepository.GetUserByEmailAsync(userEmail);
+            var beats = await _beatRepository.GetBeatsByProducerAsync(user.Id);
+
+            return Ok(_mapper.Map<IEnumerable<BeatDto>>(beats));
         }
     }
 }
