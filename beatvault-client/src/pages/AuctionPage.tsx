@@ -38,7 +38,7 @@ export default function AuctionPage() {
         // 4. LISTEN FOR UPDATES (The Magic)
         connection.on('ReceiveNewBid', (data: any) => {
             setCurrentPrice(data.newPrice);
-            setMessages(prev => [`New highest bid: $${data.newPrice} by User #${data.bidderId}`, ...prev]);
+            setMessages(prev => [`New highest bid: $${data.newPrice} by User #${data.bidderName}`, ...prev]);
         });
 
         // Cleanup when leaving page

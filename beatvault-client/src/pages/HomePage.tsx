@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import agent from '../api/agent';
-import { Play, ShoppingCart } from 'lucide-react';
+import { Play, ShoppingCart, Gavel } from 'lucide-react';
 import type { Beat } from '../models/beat';
+import { useNavigate } from 'react-router-dom';
 
 function HomePage() {
+    const navigate = useNavigate();
     const [beats, setBeats] = useState<Beat[]>([]);
 
     useEffect(() => {
@@ -46,13 +48,31 @@ function HomePage() {
                         </div>
 
                         <div className="mt-6 flex justify-between items-center">
-                            <span className="text-2xl font-bold text-green-400">
-                                ${beat.leasePrice}
-                            </span>
-                            <button className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded font-bold hover:bg-gray-200">
-                                <ShoppingCart size={18} />
-                                Buy Lease
-                            </button>
+
+                            {/* Scenario A: It's a Lease */}
+                            {beat.leasePrice && !beat.auctionId && (
+                                <>
+                                    <span className="text-2xl font-bold text-green-400">
+                                        ${beat.leasePrice}
+                                    </span>
+                                    <button className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded font-bold hover:bg-gray-200">
+                                        <ShoppingCart size={18} />
+                                        Buy
+                                    </button>
+                                </>
+                            )}
+
+                            {/* Scenario B: It's an Auction */}
+                            {beat.auctionId && (
+                                <button
+                                    onClick={() => navigate(`/auction/${beat.id}`)}
+                                    className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded font-bold hover:bg-purple-700 w-full justify-center"
+                                >
+                                    <Gavel size={18} />
+                                    Bid Live
+                                </button>
+                            )}
+
                         </div>
                     </div>
                 ))}
