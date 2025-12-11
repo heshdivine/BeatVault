@@ -14,10 +14,17 @@ export default function AuctionPage() {
     const [messages, setMessages] = useState<string[]>([]);
 
     useEffect(() => {
-        // 1. Initial Data Fetch (REST API)
-        // In a real app, fetch the beat details here. 
-        // For demo, we'll start at $50.
-        setCurrentPrice(50.00);
+        if (id) {
+            agent.Auctions.details(id)
+                .then(auction => {
+                    setCurrentPrice(auction.currentPrice);
+                    // Optional: set initial message for highest bidder
+                    if (auction.highestBidder !== "No Bids Yet") {
+                        setMessages([`Current leader: ${auction.highestBidder}`]);
+                    }
+                })
+                .catch(error => console.error("Could not load auction:", error));
+        }
 
         // 2. Build SignalR Connection
         const connection = new HubConnectionBuilder()

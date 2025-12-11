@@ -36,7 +36,8 @@ const Account = {
 };
 
 const Auctions = {
-    bid: (beatId: string, amount: number) => requests.post(`/auctions/bid?beatId=${beatId}&amount=${amount}`, {})
+    bid: (beatId: string, amount: number) => requests.post(`/auctions/bid?beatId=${beatId}&amount=${amount}`, {}),
+    details: (beatId: string) => requests.get<any>(`/auctions/${beatId}`)
 };
 
 const agent = {
