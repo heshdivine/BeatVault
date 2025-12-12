@@ -3,6 +3,7 @@ using BeatVault.API.Data.Repositories;
 using BeatVault.API.DTOs;
 using BeatVault.API.Entities;
 using BeatVault.API.Interfaces;
+using BeatVault.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,13 +16,15 @@ namespace BeatVault.API.Controllers
         private readonly IBeatRepository _beatRepository;
         private readonly IMapper _mapper; // Add Mapper
         private readonly IUserRepository _userRepository;
+        private readonly IFileService _fileService;
 
         // Inject Mapper here
-        public BeatsController(IBeatRepository beatRepository, IMapper mapper, IUserRepository userRepository)
+        public BeatsController(IBeatRepository beatRepository, IMapper mapper, IUserRepository userRepository, IFileService fileService )
         {
             _beatRepository = beatRepository;
             _userRepository = userRepository;
             _mapper = mapper;
+            _fileService = fileService;
         }
 
         // GET: api/beats
@@ -44,19 +47,34 @@ namespace BeatVault.API.Controllers
         // POST: api/beats
         [Authorize(Roles = "Producer")]
         [HttpPost]
-        public async Task<ActionResult<BeatDto>> CreateBeat(Beat beat)
+        public async Task<ActionResult<BeatDto>> CreateBeat([FromForm] BeatUploadDto uploadDto)
         {
-            // Note: In the next phase, we will use a 'CreateBeatDto' here too!
-            await _beatRepository.AddBeatAsync(beat);
-
-            if (await _beatRepository.SaveChangesAsync())
+            // 1. Basic Mapping
+            var beat = new Beat
             {
-                // Return the DTO, not the Entity
-                var beatDto = _mapper.Map<BeatDto>(beat);
-                return CreatedAtAction(nameof(GetBeats), new { id = beat.Id }, beatDto);
+                Title = uploadDto.Title,
+                BPM = uploadDto.BPM,
+                Key = uploadDto.Key,
+                LeasePrice = uploadDto.LeasePrice,
+                ProducerId = 1, // Placeholder
+                UploadedDate = DateTime.UtcNow
+            };
+
+            // 2. Save Audio Locally
+            // This will save to: BeatVault.API/wwwroot/audio/
+            beat.AudioUrl = await _fileService.SaveFileAsync(uploadDto.AudioFile, "audio");
+
+            // 3. Save Image Locally (Optional)
+            if (uploadDto.CoverImage != null)
+            {
+                beat.CoverImageUrl = await _fileService.SaveFileAsync(uploadDto.CoverImage, "images");
             }
 
-            return BadRequest("Failed to save beat");
+            // 4. Save to DB
+            await _beatRepository.AddBeatAsync(beat);
+            await _beatRepository.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetBeats), new { id = beat.Id }, _mapper.Map<BeatDto>(beat));
         }
 
         [Authorize(Roles = "Producer")]
