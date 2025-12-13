@@ -40,10 +40,16 @@ const Auctions = {
     details: (beatId: string) => requests.get<any>(`/auctions/${beatId}`)
 };
 
+const Payments = {
+    createIntent: (beatId: number) => requests.post<{ clientSecret: string }>(`/payments/create-payment-intent?beatId=${beatId}`, {}),
+    confirm: (intentId: string) => requests.post(`/orders/confirm-purchase?paymentIntentId=${intentId}`, {})
+};
+
 const agent = {
     Beats,
     Account,
-    Auctions
+    Auctions,
+    Payments
 };
 
 export default agent;

@@ -143,7 +143,10 @@ export default function HomePage() {
                             {beat.leasePrice && beat.auctionId == null && (
                                 <>
                                     <span className="text-2xl font-bold text-green-400">${beat.leasePrice}</span>
-                                    <button className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded font-bold hover:bg-gray-200 transition">
+                                    <button
+                                        onClick={() => navigate(`/checkout/${beat.id}`)} // <--- Update this
+                                        className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded font-bold hover:bg-gray-200 transition"
+                                    >
                                         <ShoppingCart size={18} /> Buy
                                     </button>
                                 </>

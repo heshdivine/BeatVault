@@ -4,6 +4,8 @@ import LoginPage from './pages/LoginPage'; // Ensure path is correct
 import { Music, UploadCloud } from 'lucide-react';
 import AuctionPage from './pages/AuctionPage';
 import UploadPage from './pages/UploadPage';
+import CheckoutPage from './pages/CheckoutPage';
+import SuccessPage from './pages/SuccessPage';
 
 function App() {
   return (
@@ -35,6 +37,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auction/:id" element={<AuctionPage />} />
           <Route path="/upload" element={<UploadPage />} />
+          <Route path="/checkout/:beatId" element={<CheckoutPage />} />
+          <Route path="/success" element={<SuccessPage />} />
         </Routes>
       </div>
     </BrowserRouter>
