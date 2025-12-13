@@ -17,17 +17,14 @@ namespace BeatVault.API.Controllers
         private readonly IMapper _mapper; // Add Mapper
         private readonly IUserRepository _userRepository;
         private readonly IFileService _fileService;
-        private readonly ICloudinaryService _cloudinaryService;
 
         // Inject Mapper here
-        public BeatsController(IBeatRepository beatRepository, IMapper mapper, IUserRepository userRepository, IFileService fileService, ICloudinaryService cloudinaryService
-            )
+        public BeatsController(IBeatRepository beatRepository, IMapper mapper, IUserRepository userRepository, IFileService fileService)
         {
             _beatRepository = beatRepository;
             _userRepository = userRepository;
             _mapper = mapper;
             _fileService = fileService;
-            _cloudinaryService = cloudinaryService;
         }
 
         // GET: api/beats
@@ -49,15 +46,15 @@ namespace BeatVault.API.Controllers
 
         // POST: api/beats
         [Authorize(Roles = "Producer")]
-        [Authorize] // Only logged in users
         [HttpPost]
         public async Task<ActionResult<BeatDto>> CreateBeat([FromForm] BeatUploadDto uploadDto)
         {
-            // 1. Handle Audio Upload (Required)
-            var audioResult = await _cloudinaryService.AddAudioAsync(uploadDto.AudioFile);
+            // 1. Handle Audio Upload (Generic)
+            // We simply ask to save the file. The implementation decides WHERE.
+            var audioUrl = await _fileService.SaveFileAsync(uploadDto.AudioFile, "beatvault-audio");
 
-            if (audioResult.Error != null)
-                return BadRequest(audioResult.Error.Message);
+            if (string.IsNullOrEmpty(audioUrl))
+                return BadRequest("Failed to upload audio");
 
             // 2. Create the Beat Object
             var beat = new Beat
@@ -66,18 +63,16 @@ namespace BeatVault.API.Controllers
                 BPM = uploadDto.BPM,
                 Key = uploadDto.Key,
                 LeasePrice = uploadDto.LeasePrice,
-                ProducerId = 1, // Placeholder: Use User.Identity logic here in next step
+                ProducerId = 1, // Placeholder for User ID
                 UploadedDate = DateTime.UtcNow,
-                AudioUrl = audioResult.SecureUrl.AbsoluteUri // Store the Cloud URL!
+                AudioUrl = audioUrl // Store the URL (Local or Cloud)
             };
 
-            // 3. Handle Image Upload (Optional)
+            // 3. Handle Image Upload (Generic)
             if (uploadDto.CoverImage != null)
             {
-                var imageResult = await _cloudinaryService.AddPhotoAsync(uploadDto.CoverImage);
-                if (imageResult.Error != null) return BadRequest(imageResult.Error.Message);
-
-                beat.CoverImageUrl = imageResult.SecureUrl.AbsoluteUri;
+                var imageUrl = await _fileService.SaveFileAsync(uploadDto.CoverImage, "beatvault-images");
+                beat.CoverImageUrl = imageUrl;
             }
 
             // 4. Save to Database
@@ -91,7 +86,7 @@ namespace BeatVault.API.Controllers
             return BadRequest("Problem saving beat");
         }
 
-    // ... GetBeats method remains the same
+        // ... GetBeats method remains the same
 
         [Authorize(Roles = "Producer")]
         [HttpGet("my-studio")]

@@ -16,12 +16,24 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddHttpContextAccessor();
-builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+// 1. Read the setting
+var storageProvider = builder.Configuration["StorageSetting:Provider"];
 
-// 2. Register the Service
-builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
-// 2. Register FileService
-builder.Services.AddScoped<IFileService, BeatVault.API.Services.FileService>();
+// 2. Decide which service to use
+if (storageProvider == "Cloudinary")
+{
+    // Register Cloudinary settings
+    builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+
+    // Register the Cloudinary Implementation
+    builder.Services.AddScoped<IFileService, CloudinaryService>();
+}
+else
+{
+    // Register the Local Implementation
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<IFileService, LocalFileService>();
+}
 builder.Services.AddScoped<IBeatRepository, BeatRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();

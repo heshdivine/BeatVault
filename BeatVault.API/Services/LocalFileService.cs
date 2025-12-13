@@ -2,12 +2,12 @@
 
 namespace BeatVault.API.Services
 {
-    public class FileService : IFileService
+    public class LocalFileService : IFileService
     {
         private readonly IWebHostEnvironment _env;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public FileService(IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor)
+        public LocalFileService(IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor)
         {
             _env = env;
             _httpContextAccessor = httpContextAccessor;
@@ -15,15 +15,11 @@ namespace BeatVault.API.Services
 
         public async Task<string> SaveFileAsync(IFormFile file, string folderName)
         {
-            // 1. Create a unique filename (e.g., "guid-beat.mp3")
+            // 1. Create a unique filename
             var uniqueFileName = $"{Guid.NewGuid()}_{file.FileName}";
 
             // 2. Get or create the web root path
             var webRootPath = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-
-            // Ensure wwwroot exists
-            if (!Directory.Exists(webRootPath))
-                Directory.CreateDirectory(webRootPath);
 
             // 3. Combine with the folder name
             var uploadsFolder = Path.Combine(webRootPath, folderName);
@@ -40,12 +36,18 @@ namespace BeatVault.API.Services
                 await file.CopyToAsync(fileStream);
             }
 
-            // 6. Return the full URL so the frontend can play it
-            // Result: https://localhost:7144/audio/unique_name.mp3
+            // 6. Return the full URL
             var request = _httpContextAccessor.HttpContext.Request;
             var baseUrl = $"{request.Scheme}://{request.Host}";
 
             return $"{baseUrl}/{folderName}/{uniqueFileName}";
+        }
+
+        public Task<bool> DeleteFileAsync(string fileUrl)
+        {
+            // For local files, we can delete them if we parse the path
+            // This is optional for your current stage
+            return Task.FromResult(true);
         }
     }
 }
