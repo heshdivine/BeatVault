@@ -1,32 +1,49 @@
 import { useState } from 'react';
 import agent from '../api/agent';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useUser } from '../context/UserContext';
+import { LogIn } from 'lucide-react';
 
 export default function LoginPage() {
     const navigate = useNavigate();
+    const { login } = useUser();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
+        setLoading(true);
+
         try {
             const user = await agent.Account.login(formData);
-            // STORE THE TOKEN! This is key.
-            localStorage.setItem('jwt', user.token);
-            alert('Welcome back, ' + user.username);
+            login(user); // Use context to log in
             navigate('/'); // Go back home
-        } catch (err) {
-            setError('Invalid login attempt');
-            console.log(err);
+        } catch (err: any) {
+            setError(err.response?.data || 'Invalid email or password');
+            console.error(err);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
-            <form onSubmit={handleSubmit} className="bg-gray-800 p-8 rounded-lg shadow-lg w-96 border border-gray-700">
-                <h2 className="text-3xl font-bold mb-6 text-center text-purple-400">Producer Login</h2>
+            <form onSubmit={handleSubmit} className="bg-gray-800 p-8 rounded-2xl shadow-2xl w-96 border border-gray-700">
+                <div className="text-center mb-8">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                        <LogIn className="text-purple-400" size={28} />
+                        <h2 className="text-3xl font-bold text-purple-400">Welcome Back</h2>
+                    </div>
+                    <p className="text-gray-400 text-sm">Sign in to your account</p>
+                </div>
 
-                {error && <div className="bg-red-500/20 text-red-400 p-3 mb-4 rounded">{error}</div>}
+                {error && (
+                    <div className="bg-red-500/20 text-red-400 p-3 mb-4 rounded border border-red-500/50">
+                        {error}
+                    </div>
+                )}
 
                 <div className="mb-4">
                     <label className="block mb-2 text-sm text-gray-400">Email</label>
@@ -48,9 +65,19 @@ export default function LoginPage() {
                     />
                 </div>
 
-                <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded transition">
-                    Sign In
+                <button
+                    disabled={loading}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition disabled:bg-purple-900 disabled:cursor-not-allowed"
+                >
+                    {loading ? 'Signing In...' : 'Sign In'}
                 </button>
+
+                <div className="mt-6 text-center text-sm text-gray-400">
+                    Don't have an account?{' '}
+                    <Link to="/signup" className="text-purple-400 hover:text-purple-300 font-medium">
+                        Sign up
+                    </Link>
+                </div>
             </form>
         </div>
     );
