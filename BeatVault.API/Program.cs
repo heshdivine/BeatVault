@@ -1,5 +1,6 @@
 using BeatVault.API.Data;
 using BeatVault.API.Data.Repositories;
+using BeatVault.API.Helpers;
 using BeatVault.API.Interfaces;
 using BeatVault.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -15,7 +16,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddHttpContextAccessor();
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
+// 2. Register the Service
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 // 2. Register FileService
 builder.Services.AddScoped<IFileService, BeatVault.API.Services.FileService>();
 builder.Services.AddScoped<IBeatRepository, BeatRepository>();
