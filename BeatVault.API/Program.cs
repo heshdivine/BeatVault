@@ -1,5 +1,6 @@
 using BeatVault.API.Data;
 using BeatVault.API.Data.Repositories;
+using BeatVault.API.Helpers;
 using BeatVault.API.Interfaces;
 using BeatVault.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,7 +15,25 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHttpContextAccessor();
+// 1. Read the setting
+var storageProvider = builder.Configuration["StorageSetting:Provider"];
 
+// 2. Decide which service to use
+if (storageProvider == "Cloudinary")
+{
+    // Register Cloudinary settings
+    builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+
+    // Register the Cloudinary Implementation
+    builder.Services.AddScoped<IFileService, CloudinaryService>();
+}
+else
+{
+    // Register the Local Implementation
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<IFileService, LocalFileService>();
+}
 builder.Services.AddScoped<IBeatRepository, BeatRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
@@ -69,6 +88,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("AllowReactApp");
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();

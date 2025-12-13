@@ -75,5 +75,26 @@ namespace BeatVault.API.Controllers
 
             return BadRequest("Failed to place bid");
         }
+
+        // GET: api/auctions/5 (Where 5 is the BeatId)
+        [HttpGet("{beatId}")]
+        public async Task<ActionResult<object>> GetAuction(int beatId)
+        {
+            var auction = await _auctionRepository.GetAuctionByBeatIdAsync(beatId);
+
+            if (auction == null) return NotFound("Auction not found");
+
+            // Return a clean anonymous object with just the data we need
+            return Ok(new
+            {
+                auction.Id,
+                auction.CurrentPrice,
+                auction.StartingPrice,
+                auction.EndTime,
+                auction.IsActive,
+                // Calculate the highest bidder's name securely
+                HighestBidder = auction.Bids.OrderByDescending(b => b.Amount).FirstOrDefault()?.User?.Username ?? "No Bids Yet"
+            });
+        }
     }
 }
