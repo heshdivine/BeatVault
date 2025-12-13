@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import HomePage from './pages/HomePage'; // Ensure path is correct
 import LoginPage from './pages/LoginPage'; // Ensure path is correct
-import { Music } from 'lucide-react';
+import { Music, UploadCloud } from 'lucide-react';
 import AuctionPage from './pages/AuctionPage';
+import UploadPage from './pages/UploadPage';
 
 function App() {
   return (
@@ -15,11 +16,16 @@ function App() {
           </Link>
           <div className="flex gap-4">
             <Link to="/" className="hover:text-purple-400 transition">Store</Link>
+            <Link to="/upload" className="hover:text-purple-400 transition flex items-center gap-1">
+              <UploadCloud size={18} /> Upload
+            </Link>
             <Link to="/login" className="bg-white text-black px-4 py-1 rounded hover:bg-gray-200 transition font-medium">
               Login
             </Link>
           </div>
         </div>
+
+
       </nav>
 
       {/* Main Content Area */}
@@ -28,6 +34,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auction/:id" element={<AuctionPage />} />
+          <Route path="/upload" element={<UploadPage />} />
         </Routes>
       </div>
     </BrowserRouter>
