@@ -13,6 +13,7 @@ namespace BeatVault.API.Data
         public DbSet<Beat> Beats { get; set; }
         public DbSet<Auction> Auctions { get; set; }
         public DbSet<Bid> Bids { get; set; }
+        public DbSet<Order> Orders { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

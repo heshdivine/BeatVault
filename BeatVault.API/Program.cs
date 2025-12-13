@@ -34,6 +34,7 @@ else
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<IFileService, LocalFileService>();
 }
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IBeatRepository, BeatRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
