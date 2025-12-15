@@ -1,0 +1,59 @@
+name: BeatVault CI (The Robot)
+
+# TRIGGER: When does the robot wake up?
+on:
+  push:
+    branches: ["main"] # Runs when you push code to the main branch
+  pull_request:
+    branches: ["main"] # Runs when someone tries to merge code
+
+# JOBS: What work needs to be done?
+jobs:
+  # JOB 1: Test the Backend
+  build-backend:
+    runs-on: ubuntu-latest # The robot uses a Linux Virtual Machine
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4 # Step 1: Download your code
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4 # Step 2: Install .NET 10
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore Dependencies
+        run: dotnet restore ./BeatVault.API/BeatVault.API.csproj
+        # ⚠️ CHECK PATH: Make sure this points to your actual .csproj file!
+
+      - name: Build Application
+        run: dotnet build ./BeatVault.API/BeatVault.API.csproj --no-restore
+
+      - name: Test Docker Build
+        # This is the ultimate test: Can Docker actually cook the recipe?
+        run: docker build -t beatvault-backend ./BeatVault.API
+
+  # JOB 2: Test the Frontend
+  build-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        # Go into the UI folder and install packages
+        run: |
+          cd BeatVault.UI 
+          npm install
+
+      - name: Test Build
+        # Check if the React app actually compiles
+        run: |
+          cd BeatVault.UI
+          npm run build

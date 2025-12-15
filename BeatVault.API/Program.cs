@@ -1,10 +1,81 @@
+using BeatVault.API.Data;
+using BeatVault.API.Data.Repositories;
+using BeatVault.API.Helpers;
+using BeatVault.API.Interfaces;
+using BeatVault.API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
+using System.Text;
+using System.Text.Json.Serialization;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHttpContextAccessor();
+// 1. Read the setting
+var storageProvider = builder.Configuration["StorageSetting:Provider"];
 
-builder.Services.AddControllers();
+// 2. Decide which service to use
+if (storageProvider == "Cloudinary")
+{
+    // Register Cloudinary settings
+    builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+
+    // Register the Cloudinary Implementation
+    builder.Services.AddScoped<IFileService, CloudinaryService>();
+}
+else
+{
+    // Register the Local Implementation
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<IFileService, LocalFileService>();
+}
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IBeatRepository, BeatRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuctionRepository, BeatVault.API.Data.Repositories.AuctionRepository>();
+
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"])),
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["JwtSettings:Audience"]
+        };
+    });
+
+//builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(x =>
+    x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+
+builder.Services.AddSignalR();
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173") // The default Vite port
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials(); // IMPORTANT for SignalR!
+        });
+});
 
 var app = builder.Build();
 
@@ -12,12 +83,42 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowReactApp");
+app.UseStaticFiles();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<BeatVault.API.Hubs.AuctionHub>("/hubs/auction");
+
+// === START OF AUTO-MIGRATION CODE ===
+// This part asks the container to create the database tables automatically
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        // REPLACE 'BeatVaultDbContext' below with the actual name of your DbContext class!
+        var context = services.GetRequiredService<BeatVault.API.Data.DataContext>();
+
+        // This command applies any pending migrations (creates tables)
+        context.Database.Migrate();
+        Console.WriteLine("--> Database Migrations Applied Successfully!");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"--> Could not apply migrations: {ex.Message}");
+    }
+}
+// === END OF AUTO-MIGRATION CODE ===
+
+
 
 app.Run();
