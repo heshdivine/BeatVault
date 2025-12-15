@@ -3,9 +3,9 @@ name: BeatVault CI (The Robot)
 # TRIGGER: When does the robot wake up?
 on:
   push:
-    branches: ["main"] # Runs when you push code to the main branch
+    branches: ["master"] # Runs when you push code to the main branch
   pull_request:
-    branches: ["main"] # Runs when someone tries to merge code
+    branches: ["master"] # Runs when someone tries to merge code
 
 # JOBS: What work needs to be done?
 jobs:
