@@ -1,0 +1,13 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.cache
+*.log
+BuildHost-net472/
+BuildHost-netcore/
+Dockerfile
+docker-compose*
+node_modules/
+.git/
