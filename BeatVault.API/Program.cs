@@ -98,4 +98,27 @@ app.MapControllers();
 
 app.MapHub<BeatVault.API.Hubs.AuctionHub>("/hubs/auction");
 
+// === START OF AUTO-MIGRATION CODE ===
+// This part asks the container to create the database tables automatically
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        // REPLACE 'BeatVaultDbContext' below with the actual name of your DbContext class!
+        var context = services.GetRequiredService<BeatVault.API.Data.DataContext>();
+
+        // This command applies any pending migrations (creates tables)
+        context.Database.Migrate();
+        Console.WriteLine("--> Database Migrations Applied Successfully!");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"--> Could not apply migrations: {ex.Message}");
+    }
+}
+// === END OF AUTO-MIGRATION CODE ===
+
+
+
 app.Run();

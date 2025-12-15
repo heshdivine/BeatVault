@@ -1,0 +1,48 @@
+﻿version: '3.8'
+
+services:
+  beatvault-db:
+    image: postgres:latest
+    container_name: beatvault_db_container
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: BeatVaultDb
+    ports:
+      - "5432:5432"
+    volumes:
+      # CHANGED HERE: We are using a new volume name "pgdata_v2"
+      - pgdata:/var/lib/postgresql
+
+  beatvault-api:
+    build: .
+    container_name: beatvault_api_container
+    ports:
+      - "5000:8080"
+    depends_on:
+      - beatvault-db
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=beatvault-db;Port=5432;Database=BeatVaultDb;Username=admin;Password=password123;
+      - ASPNETCORE_ENVIRONMENT=Development
+# --- NEW: FRONTEND UI ---
+  beatvault-ui:
+    # ⚠️ CHANGE THIS PATH:
+    # "../BeatVault.UI" means "Go up one folder, then into BeatVault.UI"
+    # Update this to match where your frontend folder is relative to this file.
+    build: ../beatvault-client 
+    container_name: beatvault_ui_container
+    ports:
+      - "5173:5173" # Host Port : Container Port
+    environment:
+      # This tells React where the Backend lives
+      - VITE_API_URL=http://localhost:5000 
+    volumes:
+      # This is the "Hot Reload" magic.
+      # It maps your actual folder to the container folder.
+      # When you save a file on your laptop, it updates inside the container instantly.
+      - ../beatvault-client:/app
+      - /app/node_modules # prevent container from using host node_modules
+
+volumes:
+  # CHANGED HERE: Matching the new name
+  pgdata:
