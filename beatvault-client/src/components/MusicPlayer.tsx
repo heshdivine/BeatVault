@@ -12,7 +12,7 @@ interface Props {
     onVolumeChange: (value: number) => void;
 }
 
-export default function MusicPlayer({ beat, isPlaying, onToggle, progress, onSeek, duration, currentTime, volume, onVolumeChange }: Props) {
+export default function MusicPlayer({ beat, isPlaying, onToggle, onSeek, duration, currentTime, volume, onVolumeChange }: Props) {
 
     // Helper to format seconds into 0:00
     const formatTime = (time: number) => {
