@@ -22,6 +22,10 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Run Tests
+        # This runs the command you just typed manually
+        run: dotnet test ./BeatVault.Tests/BeatVault.Tests.csproj --no-restore
+
       - name: Restore Dependencies
         run: dotnet restore ./BeatVault.API/BeatVault.API.csproj
         # ⚠️ CHECK PATH: Make sure this points to your actual .csproj file!
